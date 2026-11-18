@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s      # a cada 15 s o Prometheus lê o /metrics do serviço
+
+scrape_configs:
+  - job_name: leitura_medidor
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["host.docker.internal:3000"]

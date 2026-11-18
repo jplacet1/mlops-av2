@@ -1,0 +1,31 @@
+// Acompanha o log JSONL do serviço (inclusive os arquivos girados) e manda ao Loki.
+local.file_match "requisicoes" {
+  path_targets = [{"__path__" = "/logs/requisicoes.jsonl*", "job" = "leitura_medidor"}]
+}
+
+loki.source.file "requisicoes" {
+  targets    = local.file_match.requisicoes.targets
+  forward_to = [loki.process.requisicoes.receiver]
+}
+
+loki.process "requisicoes" {
+  // Usa o horário gravado pelo serviço, não o horário em que o Alloy leu a linha.
+  stage.json {
+    expressions = {ts = "ts", endpoint = "endpoint", http_status = "http_status"}
+  }
+  stage.timestamp {
+    source = "ts"
+    format = "RFC3339Nano"
+  }
+  // Poucos rótulos de baixa cardinalidade; o resto fica no corpo JSON da linha.
+  stage.labels {
+    values = {endpoint = "", http_status = ""}
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

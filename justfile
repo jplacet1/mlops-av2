@@ -27,3 +27,29 @@ test:
 # Envia uma foto ao serviço já no ar e mostra a resposta
 demo foto="examples/example02.jpg":
     curl -s -F "image=@{{foto}}" http://localhost:3000/extract | uv run python -m json.tool --no-ensure-ascii
+
+# --- Monitoramento (ver monitoring/README.md) ---
+
+# Gera carga no /extract: just carga 20 referencia | just carga 50 producao
+carga n="20" perfil="referencia":
+    uv run python -m monitoring.gerar_carga --n {{n}} --perfil {{perfil}}
+
+# Acompanha o log de pedidos ao vivo (Ctrl+C para sair)
+rastro:
+    tail -f logs/requisicoes.jsonl
+
+# Sobe Prometheus, Loki, Alloy e Grafana (precisa do Docker)
+stack:
+    docker compose -f monitoring/stack/docker-compose.yml up -d
+
+# Derruba a stack (os dados ficam nos volumes)
+stack-down:
+    docker compose -f monitoring/stack/docker-compose.yml down
+
+# Grava o /metrics no DuckDB a cada 15 s (Ctrl+C para sair)
+duckdb:
+    uv run python -m monitoring.metrics_para_duckdb
+
+# Monta a planilha de análise do /metrics a partir de duas leituras
+planilha a="docs/metrics/snapshot_a.txt" b="docs/metrics/snapshot_b.txt":
+    uv run python -m monitoring.planilha_metrics {{a}} {{b}}

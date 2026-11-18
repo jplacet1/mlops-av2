@@ -1,0 +1,122 @@
+# HELP bentoml_service_request_total Total number of runner RPC
+# TYPE bentoml_service_request_total counter
+bentoml_service_request_total{endpoint="/extract",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_total{endpoint="/extract",http_response_code="500",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+bentoml_service_request_total{endpoint="/healthz",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_total{endpoint="/monitor/variaveis",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_total{endpoint="/extract",http_response_code="400",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+# HELP leitura_status_total Respostas do /extract por status
+# TYPE leitura_status_total counter
+leitura_status_total{status="ILEGIVEL"} 27.0
+leitura_status_total{status="OK"} 28.0
+# HELP bentoml_service_last_request_timestamp_seconds Timestamp of the last received request
+# TYPE bentoml_service_last_request_timestamp_seconds gauge
+bentoml_service_last_request_timestamp_seconds{pid="19700",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.7949605529208376e+09
+# HELP bentoml_service_request_in_progress Total number of runner RPC in progress now
+# TYPE bentoml_service_request_in_progress gauge
+bentoml_service_request_in_progress{endpoint="/healthz",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+bentoml_service_request_in_progress{endpoint="/extract",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+bentoml_service_request_in_progress{endpoint="/monitor/variaveis",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+# HELP leitura_confianca_geral Confiança geral devolvida pelo /extract
+# TYPE leitura_confianca_geral histogram
+leitura_confianca_geral_sum 11.420000000000003
+leitura_confianca_geral_bucket{le="0.1"} 27.0
+leitura_confianca_geral_bucket{le="0.2"} 27.0
+leitura_confianca_geral_bucket{le="0.3"} 45.0
+leitura_confianca_geral_bucket{le="0.4"} 45.0
+leitura_confianca_geral_bucket{le="0.5"} 45.0
+leitura_confianca_geral_bucket{le="0.6"} 54.0
+leitura_confianca_geral_bucket{le="0.7"} 55.0
+leitura_confianca_geral_bucket{le="0.8"} 55.0
+leitura_confianca_geral_bucket{le="0.9"} 55.0
+leitura_confianca_geral_bucket{le="1.0"} 55.0
+leitura_confianca_geral_bucket{le="+Inf"} 55.0
+leitura_confianca_geral_count 55.0
+# HELP leitura_nitidez_entrada Nitidez (variância de bordas) da foto recebida
+# TYPE leitura_nitidez_entrada histogram
+leitura_nitidez_entrada_sum 50965.68000000001
+leitura_nitidez_entrada_bucket{le="50.0"} 6.0
+leitura_nitidez_entrada_bucket{le="100.0"} 10.0
+leitura_nitidez_entrada_bucket{le="200.0"} 21.0
+leitura_nitidez_entrada_bucket{le="300.0"} 27.0
+leitura_nitidez_entrada_bucket{le="500.0"} 36.0
+leitura_nitidez_entrada_bucket{le="1000.0"} 39.0
+leitura_nitidez_entrada_bucket{le="2000.0"} 47.0
+leitura_nitidez_entrada_bucket{le="4000.0"} 53.0
+leitura_nitidez_entrada_bucket{le="8000.0"} 55.0
+leitura_nitidez_entrada_bucket{le="+Inf"} 55.0
+leitura_nitidez_entrada_count 55.0
+# HELP bentoml_service_request_duration_seconds runner RPC duration in seconds
+# TYPE bentoml_service_request_duration_seconds histogram
+bentoml_service_request_duration_seconds_sum{endpoint="/healthz",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0022779999999329448
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.005",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.01",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.025",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.05",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.1",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.25",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="0.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="1.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="2.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="5.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="10.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="30.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="60.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="120.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="180.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/healthz",http_response_code="200",le="+Inf",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_count{endpoint="/healthz",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_sum{endpoint="/extract",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 268.54244449999896
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.005",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.01",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 11.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.025",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 26.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.05",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.1",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.25",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="0.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="1.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="2.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="5.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 27.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="10.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="30.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="60.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="120.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="180.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="200",le="+Inf",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_count{endpoint="/extract",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 55.0
+bentoml_service_request_duration_seconds_sum{endpoint="/monitor/variaveis",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.001476100000218139
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.005",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.01",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.025",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.05",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.1",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.25",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="0.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="1.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="2.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="5.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="10.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="30.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="60.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="120.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="180.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/monitor/variaveis",http_response_code="200",le="+Inf",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_count{endpoint="/monitor/variaveis",http_response_code="200",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 1.0
+bentoml_service_request_duration_seconds_sum{endpoint="/extract",http_response_code="400",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.09250449999990451
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.005",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 0.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.01",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 2.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.025",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 2.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.05",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 2.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.1",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.25",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="0.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="1.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="2.5",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="5.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="10.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="30.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="60.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="120.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="180.0",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_bucket{endpoint="/extract",http_response_code="400",le="+Inf",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0
+bentoml_service_request_duration_seconds_count{endpoint="/extract",http_response_code="400",runner_name="leitura_medidor",service_name="leitura_medidor",service_version="not available"} 3.0

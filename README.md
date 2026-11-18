@@ -9,6 +9,11 @@ conferência manual na distribuidora.
 foto ──► POST /extract ──► checagem de nitidez ──► qwen2.5vl:3b (Ollama, local) ──► validação + confiança ──► JSON
 ```
 
+> **AV2 (monitoramento):** o rastro de cada pedido, o `/metrics` e os extras (Loki,
+> Prometheus, DuckDB, `/monitor/variaveis`) estão documentados em
+> [`monitoring/README.md`](monitoring/README.md). Este README continua descrevendo o
+> serviço da AV1.
+
 ## Modelo
 
 | Item | Valor |
