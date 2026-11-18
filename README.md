@@ -131,8 +131,8 @@ ollama serve
 
 ```bash
 # Terminal 2: instalação e serviço
-git clone https://github.com/henriquebouwman/ml-ops-av1.git
-cd ml-ops-av1
+git clone https://github.com/jplacet1/mlops-av2.git
+cd mlops-av2
 uv run just setup     # até ~1 min: Python 3.12.13 + dependências exatas do uv.lock (~85 MB)
 uv run just model     # ~2 a 10 min, conforme a rede: download de 3,2 GB
 uv run just serve     # sobe em poucos segundos e fica rodando
@@ -140,7 +140,7 @@ uv run just serve     # sobe em poucos segundos e fica rodando
 
 ```bash
 # Terminal 3: primeira predição
-cd ml-ops-av1
+cd mlops-av2
 uv run just demo      # ~20 s na primeira chamada (carrega o modelo), depois 1,5 a 5 s
 ```
 
