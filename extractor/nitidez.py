@@ -15,3 +15,7 @@ def nitidez(imagem: Image.Image) -> float:
     cinza.thumbnail((1024, 1024))
     return ImageStat.Stat(cinza.filter(ImageFilter.FIND_EDGES)).var[0]
 
+
+
+def imagem_nitida(imagem: Image.Image) -> bool:
+    return nitidez(imagem) >= LIMIAR_NITIDEZ

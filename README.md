@@ -168,10 +168,20 @@ UV_OFFLINE=1 uv run just demo     # terminal 3
 
 `UV_OFFLINE=1` impede o `uv` de tentar consultar a internet.
 
-**Windows.** Na AV2, o fluxo acima foi testado no Windows 11 com o Git Bash (que vem
-com o git): os mesmos comandos funcionam, inclusive o `just`, num clone limpo. No
-PowerShell puro, algumas receitas do `justfile` podem não funcionar (por exemplo
-`just rastro`, que usa `tail`); os comandos equivalentes são:
+**Windows.** Testado em Windows 11 (Git Bash, `uv` 0.12.23, Ollama 0.35.1, Ryzen 5 5600X,
+16 GB de RAM, Radeon RX 6600): `uv sync --frozen`, `uv run just serve`, `uv run just demo`
+e `uv run just test` funcionam e dão as mesmas respostas do macOS (`example02.jpg`:
+série `00175519`, consumo `1385`; `example04.jpg`: série `4788591`, consumo `28256`).
+Tempo medido: ~24 s na primeira chamada (carrega o modelo), 3,6 s nas seguintes. O `just`
+roda as receitas com `sh` (vem com o Git para Windows), e as receitas chamam o `uv`
+diretamente: ele precisa estar no `PATH`. Com o instalador oficial do `uv`
+(`irm https://astral.sh/uv/install.ps1 | iex`, que instala em `~/.local/bin` e já o põe no
+`PATH`) isso funciona, e foi o que testamos; se instalou com `pip install --user uv`, adicione ao `PATH` a pasta
+`%APPDATA%\Python\Python313\Scripts`, ou use `python -m uv run just ...` com essa pasta
+no `PATH`. Em PowerShell puro, sem Git para Windows, o `justfile` pode não funcionar; os
+comandos equivalentes são (na AV2, o fluxo foi repetido num clone limpo com o Git Bash,
+inclusive as receitas novas; a única que não roda no PowerShell puro é `just rastro`,
+que usa `tail`):
 
 ```powershell
 uv sync --frozen
@@ -259,9 +269,10 @@ prontos.
 uv run just test
 ```
 
-Cinco testes em `tests/test_service.py`, que chamam o app do BentoML em processo (sem
-subir servidor). Os três primeiros são da AV1; os dois últimos, da AV2. O log dos testes
-vai para uma pasta temporária (`tests/conftest.py`), nunca para `logs/`:
+O `just test` roda os dois arquivos de teste. Os cinco testes de `tests/test_service.py`
+chamam o app do BentoML em processo (sem subir servidor). Os três primeiros são da AV1;
+os dois últimos, da AV2. O log dos testes vai para uma pasta temporária
+(`tests/conftest.py`), nunca para `logs/`:
 
 | Teste | O que verifica | Precisa do Ollama? |
 |---|---|---|
@@ -271,7 +282,15 @@ vai para uma pasta temporária (`tests/conftest.py`), nunca para `logs/`:
 | `test_cada_pedido_vira_uma_linha_no_log` | um pedido bom e um inválido acrescentam exatamente 2 linhas ao log, com sinais de entrada e saída, fuso no `ts` e o erro do 400 | não |
 | `test_monitor_variaveis_devolve_colunas_achatadas` | `GET /monitor/variaveis` filtra por status, devolve CSV e recusa data inválida com 400 | não |
 
-Saída esperada: `5 passed` (ou `4 passed, 1 skipped` sem o Ollama).
+Também há `tests/test_confianca_nitidez.py`, com testes unitários da fórmula de confiança
+e da checagem de nitidez (7 passam, 1 `xfail`; não precisam de Ollama). O `xfail` documenta
+uma limitação conhecida: o `FIND_EDGES` do Pillow não filtra a borda de 1 px, então uma
+imagem lisa e não preta (por exemplo, cinza 200x200) passa como nítida. Fotos reais não
+são lisas, mas a checagem de nitidez não é à prova disso.
+
+Saída esperada do `just test` (os dois arquivos juntos): `12 passed, 1 xfailed` com o
+Ollama de pé e o modelo baixado, ou `11 passed, 1 skipped, 1 xfailed` sem o Ollama (o teste
+da foto boa é pulado).
 
 O `/metrics`, o Prometheus, o Loki e o DuckDB não cabem em teste em processo; para eles,
 `uv run just verificar` confere tudo com o serviço e a stack no ar (ver
@@ -337,21 +356,41 @@ não ter um modelo com boa acurácia. Depois disso, as decisões passaram a prio
 serviço em volta do modelo.
 
 - **O que aceitamos sem alterar:** de modo geral, a execução das etapas do roteiro.
-- **O que corrigimos ou rejeitamos:** na AV2, a ferramenta sugeriu trocar o modelo do
-  Ollama por um classificador pré-treinado (ResNet ou CLIP), que responderia em
-  milissegundos. Rejeitamos para a Parte 1: reaproveitar o serviço da AV1 mantinha o
-  problema de negócio e o CRISP-DM já feitos, e a latência de ~10 s por foto não
-  atrapalha o monitoramento. A ferramenta também escolheu sozinha deixar o repositório
-  público e foi barrada até confirmarmos.
-- **O que ainda não confiamos:** o limiar de nitidez de 300 e a fórmula de confiança,
-  calibrados só nas 5 fotos de exemplo; o prompt, que ainda troca campos em fotos de
-  baixa resolução; e, na AV2, as fotos de carga, que são variações dessas mesmas 5
-  fotos e não representam a variedade real de medidores. Os percentis estimados pelos
-  buckets do `/metrics` também erram muito em buckets largos (p50 de 5,8 s contra 9,3 s
-  exatos), então para SLA usamos o log.
-- **Como dividimos a revisão do código:** na AV1, o Henrique revisou o serviço
-  (`service.py`) e o extrator (`extractor/`). Na AV2, o João Pedro revisou o
-  monitoramento (`monitoring/`), da escolha das variáveis do log à stack de extras.
+- **O que corrigimos ou rejeitamos:**
+  - Rejeitamos a licença que o Ollama exibe (Apache 2.0) para o `qwen2.5vl:3b`; o
+    repositório original declara uma licença só para pesquisa, e a seção Modelo foi
+    corrigida.
+  - Tiramos do prompt o valor de exemplo, porque o modelo o copiava como resposta.
+  - Não aceitamos que o modelo decida sozinho quando não há display: a checagem de
+    nitidez antes do modelo existe porque ele inventava `1234567890` numa imagem lisa.
+  - Corrigimos o passo a passo do README depois de simular um clone limpo (travava num
+    terminal só, e o tamanho do ambiente estava errado).
+  - Na AV2, a ferramenta sugeriu trocar o modelo do Ollama por um classificador
+    pré-treinado (ResNet ou CLIP), que responderia em milissegundos. Rejeitamos para a
+    Parte 1: reaproveitar o serviço da AV1 mantinha o problema de negócio e o CRISP-DM já
+    feitos, e a latência de ~10 s por foto não atrapalha o monitoramento. A ferramenta
+    também escolheu sozinha deixar o repositório público e foi barrada até confirmarmos.
+- **O que ainda não confiamos:**
+  - **O limiar de nitidez (300):** foi calibrado só nas imagens de exemplo. Além disso, o
+    `FIND_EDGES` do Pillow não filtra a borda de 1 px, então uma imagem lisa e não preta
+    passa como nítida (cinza 200×200 dá variância 319; branca, 1268). Está registrado
+    como `xfail` em `tests/test_confianca_nitidez.py`.
+  - **A fórmula de confiança:** o modelo declarou 0,9 até em campos errados, e a fórmula
+    só corta pela metade quando o formato é inválido. Um número errado com formato válido
+    mantém a confiança alta.
+  - **O prompt:** foi ajustado a olho em 5 fotos, sem base rotulada, e a função quase
+    nunca é lida.
+  - **As fotos de carga da AV2:** são variações das mesmas 5 fotos de exemplo e não
+    representam a variedade real de medidores.
+  - **Os percentis do `/metrics`:** são estimados pelos buckets e erram em buckets
+    largos; para SLA usamos o `latencia_ms` do log.
+- **Como dividimos a revisão do código:**
+  - João Pedro revisou o README, `service.py`, `extractor/modelo.py`,
+    `extractor/confianca.py`, `extractor/nitidez.py` e `tests/test_service.py`, e escreveu
+    os testes unitários de confiança e nitidez (branch `joao/testes-unitarios`, em pull
+    request).
+  - Na AV2, o João Pedro revisou o monitoramento (`monitoring/`), da escolha das
+    variáveis do log à stack de extras.
 
 ## Estrutura
 
@@ -364,7 +403,7 @@ extractor/
 monitoring/          AV2: log, /monitor/variaveis, carga, DuckDB, planilha, verificação
   README.md          roteiro de avaliação da AV2
   stack/             docker-compose com Prometheus, Loki, Alloy e Grafana
-tests/               5 testes do /extract e do monitoramento
+tests/               5 testes do /extract e do monitoramento + 8 unitários de confiança e nitidez
 examples/            5 fotos públicas + exemplo_resposta.json
 docs/                evidências (curl, Swagger, evidencias_av2.txt) e texto sobre as imagens
   metrics/           leituras do /metrics e planilha de análise (AV2)
