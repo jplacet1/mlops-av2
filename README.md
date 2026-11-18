@@ -337,11 +337,21 @@ não ter um modelo com boa acurácia. Depois disso, as decisões passaram a prio
 serviço em volta do modelo.
 
 - **O que aceitamos sem alterar:** de modo geral, a execução das etapas do roteiro.
-- **O que corrigimos ou rejeitamos:** _[PENDENTE: preencher pela equipe]_
-- **O que ainda não confiamos:** _[PENDENTE: preencher pela equipe — por exemplo, o
-  limiar de nitidez de 300, a fórmula de confiança, o prompt]_
-- **Como dividimos a revisão do código:** _[PENDENTE: preencher pela equipe — quem
-  revisou `service.py`, `extractor/`, os testes e o README]_
+- **O que corrigimos ou rejeitamos:** na AV2, a ferramenta sugeriu trocar o modelo do
+  Ollama por um classificador pré-treinado (ResNet ou CLIP), que responderia em
+  milissegundos. Rejeitamos para a Parte 1: reaproveitar o serviço da AV1 mantinha o
+  problema de negócio e o CRISP-DM já feitos, e a latência de ~10 s por foto não
+  atrapalha o monitoramento. A ferramenta também escolheu sozinha deixar o repositório
+  público e foi barrada até confirmarmos.
+- **O que ainda não confiamos:** o limiar de nitidez de 300 e a fórmula de confiança,
+  calibrados só nas 5 fotos de exemplo; o prompt, que ainda troca campos em fotos de
+  baixa resolução; e, na AV2, as fotos de carga, que são variações dessas mesmas 5
+  fotos e não representam a variedade real de medidores. Os percentis estimados pelos
+  buckets do `/metrics` também erram muito em buckets largos (p50 de 5,8 s contra 9,3 s
+  exatos), então para SLA usamos o log.
+- **Como dividimos a revisão do código:** na AV1, o Henrique revisou o serviço
+  (`service.py`) e o extrator (`extractor/`). Na AV2, o João Pedro revisou o
+  monitoramento (`monitoring/`), da escolha das variáveis do log à stack de extras.
 
 ## Estrutura
 
