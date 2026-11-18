@@ -148,8 +148,8 @@ def main() -> None:
         con = duckdb.connect(f"{pasta}/teste.duckdb")
         con.execute(TABELA)
         con.executemany("insert into amostras values (?, ?, ?, ?)", raspar(f"{SERVICO}/metrics"))
-        n = con.sql("select count(*) from amostras").fetchone()[0]
-        v400 = con.sql("select valor from amostras where metrica='bentoml_service_request_total' "
+        n = con.execute("select count(*) from amostras").fetchone()[0]
+        v400 = con.execute("select valor from amostras where metrica='bentoml_service_request_total' "
                        "and rotulos->>'endpoint'='/extract' "
                        "and rotulos->>'http_response_code'='400'").fetchone()
         con.close()
