@@ -15,6 +15,11 @@ para analisar esse rastro.
 | Extra: `/metrics` salvo no banco do Prometheus | volume `prometheus_dados` (TSDB), retenção de 15 dias | 10 |
 | Extra: `/metrics` salvo em banco relacional | [`metrics_para_duckdb.py`](metrics_para_duckdb.py) → `logs/metrics.duckdb` | 5 |
 
+**Conferência rápida.** Com o serviço e a stack no ar, `uv run just verificar` manda 3
+pedidos marcados e segue cada um pelo log, `/monitor/variaveis`, `/metrics`, Prometheus,
+Loki, Grafana e DuckDB, imprimindo `OK` ou `FALHOU` por item. A saída de uma execução
+num clone limpo está em [`docs/evidencias_av2.txt`](../docs/evidencias_av2.txt).
+
 ## 1. Do zero até ver o rastro evoluir
 
 Pré-requisitos: os mesmos do README principal (uv, Ollama com `qwen2.5vl:3b`). Os

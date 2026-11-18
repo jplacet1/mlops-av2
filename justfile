@@ -53,3 +53,7 @@ duckdb:
 # Monta a planilha de análise do /metrics a partir de duas leituras
 planilha a="docs/metrics/snapshot_a.txt" b="docs/metrics/snapshot_b.txt":
     uv run python -m monitoring.planilha_metrics {{a}} {{b}}
+
+# Confere de ponta a ponta o log, o /metrics e todos os extras (serviço e stack no ar)
+verificar:
+    uv run python -m monitoring.verificar

@@ -1,0 +1,42 @@
+# Saída de 'uv run python -m monitoring.verificar' num clone limpo do GitHub
+# 2026-11-17T21:18:30-03:00, Windows 11, Docker Desktop 4.99, Ollama 0.40.16 (qwen2.5vl:3b na GPU)
+# Antes: uv sync --frozen, pytest (5 passed), just serve, just stack, just carga 5 referencia, just carga 10 producao
+
+== Serviço
+[OK ] GET /healthz responde 200
+[OK ] GET /readyz responde 200 (Ollama com o modelo)
+== Log em arquivo
+   3 pedidos em 3.1 s: HTTP 200, 200, 400
+[OK ] cada pedido acrescentou exatamente 1 linha  (21 → 24 linhas)
+[OK ] linhas antigas intactas (append-only)
+[OK ] foto boa: status OK, nitidez e confiança registradas  (nitidez 959.4, confiança 0.6)
+[OK ] foto borrada: ILEGIVEL sem chamar o modelo  (nitidez 60.6)
+[OK ] arquivo inválido: HTTP 400 registrado com o erro
+[OK ] ts em ISO 8601 com microssegundos e fuso  (2026-11-17T21:18:38.321968-03:00)
+[OK ] número do medidor não vai para o log (LGPD)
+== GET /metrics
+[OK ] /metrics tem bentoml_service_request_duration_seconds_bucket
+[OK ] /metrics tem bentoml_service_request_total
+[OK ] /metrics tem leitura_status_total
+[OK ] /metrics tem leitura_confianca_geral_bucket
+[OK ] /metrics tem leitura_nitidez_entrada_bucket
+== Extra: GET /monitor/variaveis (20 pts)
+[OK ] JSON filtrado por status traz o pedido inválido  (3 pedidos com 400)
+[OK ] CSV com colunas achatadas  (24 linhas)
+== Extra: Prometheus coletando o /metrics (15 pts)
+[OK ] alvo leitura_medidor está UP  (['up'])
+[OK ] Prometheus já tem os pedidos de agora  (/metrics: 24, Prometheus: 24.0)
+[OK ] PromQL calcula o p95 da latência  (p95 = 8.628857936834244 s)
+== Extra: /metrics salvo no banco do Prometheus (10 pts)
+[OK ] TSDB guarda o histórico de coletas  (10.0 pontos em 24 h)
+[OK ] banco com séries gravadas  (133 séries)
+== Extra: log no Loki (5 pts)
+[OK ] linha do pedido inválido chegou ao Loki (pelo request_id)  (400)
+== Grafana
+[OK ] Grafana de pé
+[OK ] fontes Prometheus e Loki configuradas  (['loki', 'prometheus'])
+== Extra: /metrics salvo no DuckDB (5 pts)
+[OK ] raspagem gravada na tabela amostras  (128 linhas)
+[OK ] consulta SQL acha o contador de 400  ((3.0,))
+
+TUDO OK
