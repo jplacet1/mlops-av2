@@ -55,8 +55,10 @@ campo e marca como `ILEGIVEL` fotos sem display legível.
 - **O limiar de nitidez (300) foi calibrado só nas imagens de exemplo.** Nas fotos reais
   ele pode marcar como `ILEGIVEL` fotos que um humano ainda conseguiria ler, ou deixar
   passar fotos ruins.
-- **Tempo:** 1,5 a 5 s por foto num Mac com Apple Silicon; a primeira chamada depois de
-  subir o Ollama leva cerca de 20 s, porque carrega o modelo na memória.
+- **Tempo:** 1,5 a 5 s por foto num Mac com Apple Silicon; 2 a 16 s (mediana ~9,6 s)
+  num PC com Ryzen 5 5600X e Radeon RX 6600, com o modelo 100% na GPU. A primeira
+  chamada depois de subir o Ollama levava cerca de 20 s, para carregar o modelo; na AV2
+  o serviço aquece o modelo ao subir e pede ao Ollama para mantê-lo carregado por 30 min.
 
 **Casos de sucesso e de falha nas fotos de exemplo** (valores reais lidos a olho na foto):
 
@@ -111,10 +113,11 @@ pedido do autor ou do detentor dos direitos.
 
 | Ferramenta | Versão testada | Observação |
 |---|---|---|
-| macOS ou Linux | macOS 27 (Apple Silicon) | |
+| macOS, Linux ou Windows | macOS 27 (Apple Silicon) na AV1; Windows 11 (Git Bash) na AV2 | |
 | git | qualquer recente | |
-| [uv](https://docs.astral.sh/uv/getting-started/installation/) | 0.11.8 | baixa sozinho o Python 3.12.13 e o `just` |
-| [Ollama](https://ollama.com/download) | 0.12.3 | |
+| [uv](https://docs.astral.sh/uv/getting-started/installation/) | 0.11.8 (AV1), 0.12.23 (AV2) | baixa sozinho o Python 3.12.13 e o `just` |
+| [Ollama](https://ollama.com/download) | 0.12.3 (AV1), 0.40.16 (AV2) | |
+| [Docker](https://docs.docker.com/get-docker/) com Compose | Docker Desktop 4.99 (AV2) | só para os extras de monitoramento ([`monitoring/README.md`](monitoring/README.md)) |
 | Disco | ~4 GB livres | 3,2 GB do modelo + ~100 MB do ambiente Python |
 | RAM | 8 GB ou mais | |
 
@@ -141,7 +144,7 @@ uv run just serve     # sobe em poucos segundos e fica rodando
 ```bash
 # Terminal 3: primeira predição
 cd mlops-av2
-uv run just demo      # ~20 s na primeira chamada (carrega o modelo), depois 1,5 a 5 s
+uv run just demo      # alguns segundos por foto (ver Tempo, em Limitações)
 ```
 
 Para conferir se está de pé: `curl -i http://localhost:3000/healthz` responde 200 quando
@@ -165,10 +168,10 @@ UV_OFFLINE=1 uv run just demo     # terminal 3
 
 `UV_OFFLINE=1` impede o `uv` de tentar consultar a internet.
 
-**Windows.** O fluxo acima foi testado em macOS; em Linux os comandos são os mesmos.
-Não foi testado no Windows. No Windows, a recomendação é usar WSL2 e seguir os mesmos
-comandos. Sem WSL, o `justfile` pode não
-funcionar; os comandos equivalentes, no PowerShell, são:
+**Windows.** Na AV2, o fluxo acima foi testado no Windows 11 com o Git Bash (que vem
+com o git): os mesmos comandos funcionam, inclusive o `just`, num clone limpo. No
+PowerShell puro, algumas receitas do `justfile` podem não funcionar (por exemplo
+`just rastro`, que usa `tail`); os comandos equivalentes são:
 
 ```powershell
 uv sync --frozen
@@ -256,16 +259,23 @@ prontos.
 uv run just test
 ```
 
-Três testes em `tests/test_service.py`, que chamam o app do BentoML em processo (sem
-subir servidor):
+Cinco testes em `tests/test_service.py`, que chamam o app do BentoML em processo (sem
+subir servidor). Os três primeiros são da AV1; os dois últimos, da AV2. O log dos testes
+vai para uma pasta temporária (`tests/conftest.py`), nunca para `logs/`:
 
 | Teste | O que verifica | Precisa do Ollama? |
 |---|---|---|
 | `test_foto_boa_extrai_leitura` | `example02.jpg` → 200, `status: OK`, consumo 1385 | sim; é pulado (`SKIPPED`) com o motivo se o Ollama não estiver de pé |
 | `test_foto_ruim_devolve_ilegivel` | `example02.jpg` desfocada → 200, campos `null`, `status: ILEGIVEL`, confiança 0 | não |
 | `test_entrada_invalida_devolve_400` | texto enviado como `.jpg` → 400 com mensagem clara | não |
+| `test_cada_pedido_vira_uma_linha_no_log` | um pedido bom e um inválido acrescentam exatamente 2 linhas ao log, com sinais de entrada e saída, fuso no `ts` e o erro do 400 | não |
+| `test_monitor_variaveis_devolve_colunas_achatadas` | `GET /monitor/variaveis` filtra por status, devolve CSV e recusa data inválida com 400 | não |
 
-Saída esperada: `3 passed` (ou `2 passed, 1 skipped` sem o Ollama).
+Saída esperada: `5 passed` (ou `4 passed, 1 skipped` sem o Ollama).
+
+O `/metrics`, o Prometheus, o Loki e o DuckDB não cabem em teste em processo; para eles,
+`uv run just verificar` confere tudo com o serviço e a stack no ar (ver
+[`monitoring/README.md`](monitoring/README.md)).
 
 ## Uso de IA
 
@@ -290,7 +300,10 @@ Saída esperada: `3 passed` (ou `2 passed, 1 skipped` sem o Ollama).
 | Comando único | `justfile` com setup, model, serve, test e demo | `e789fa8` |
 | Testes | 3 testes: foto boa, foto ruim e entrada inválida | `82ffb24` |
 | README | seções na ordem das perguntas da apresentação, com limitações honestas | `ac68526` |
-| Revisão da entrega | simular um clone limpo seguindo o README e corrigir o que travasse; checklist de nome do cliente, segredos e dados; pendências finais (quebras de linha, imagens, Swagger, Windows, esta seção) | `0ccf5d5` em diante |
+| Revisão da entrega | simular um clone limpo seguindo o README e corrigir o que travasse; checklist de nome do cliente, segredos e dados; pendências finais (quebras de linha, imagens, Swagger, Windows, esta seção) | `0ccf5d5` a `ee3444c` |
+| AV2: log e endpoint | log JSONL append-only de cada pedido, escolha das variáveis, métricas próprias no `/metrics`, `GET /monitor/variaveis`, aquecimento do modelo e script de carga | `45ac04d` |
+| AV2: extras e documentação | stack Prometheus/Loki/Alloy/Grafana, gravação do `/metrics` no DuckDB, planilha com fórmulas e `monitoring/README.md` | `73a5092` |
+| AV2: verificação | script que confere tudo de ponta a ponta, rodado num clone limpo do GitHub | `76c47f8` em diante |
 
 **Problemas que apareceram durante a execução** (a maioria apontada pela própria
 ferramenta ao testar; registramos aqui porque mudaram o resultado):
@@ -306,6 +319,14 @@ ferramenta ao testar; registramos aqui porque mudaram o resultado):
   simulação do clone limpo.
 - Nós colocamos por engano a pasta com a base do cliente dentro do repositório; a
   ferramenta parou antes de qualquer commit e a pasta foi movida para fora.
+- AV2: o teste do `/metrics` falhou porque o app em processo dos testes não serve esse
+  endpoint (quem serve é o `bentoml serve`); a conferência foi para `just verificar`.
+- AV2: a primeira execução do `just verificar` num clone limpo quebrou na parte do
+  DuckDB, porque a versão 2.0 mudou a API de consulta; o script foi corrigido e
+  rodado de novo (saída em `docs/evidencias_av2.txt`).
+- AV2: a planilha estima o p50 da latência em 5,83 s pelos buckets, mas pelo log o
+  exato é 9,33 s; a diferença vem do bucket largo de 5 a 10 s e está explicada em
+  `monitoring/README.md`.
 
 **Nossa avaliação crítica**
 
@@ -330,11 +351,17 @@ extractor/
   modelo.py          prompt, JSON schema, chamada ao Ollama e limpeza dos campos
   nitidez.py         checagem de nitidez antes do modelo
   confianca.py       validações de formato e fórmula da confiança
-tests/               3 testes do /extract
+monitoring/          AV2: log, /monitor/variaveis, carga, DuckDB, planilha, verificação
+  README.md          roteiro de avaliação da AV2
+  stack/             docker-compose com Prometheus, Loki, Alloy e Grafana
+tests/               5 testes do /extract e do monitoramento
 examples/            5 fotos públicas + exemplo_resposta.json
-docs/                evidências (curl, Swagger) e texto do slide sobre as imagens
+docs/                evidências (curl, Swagger, evidencias_av2.txt) e texto sobre as imagens
+  metrics/           leituras do /metrics e planilha de análise (AV2)
 scripts/probe_model.py   teste descartável usado para escolher o modelo
-justfile             setup, model, serve, test, demo
+justfile             setup, model, serve, test, demo; na AV2: carga, rastro, stack,
+                     stack-down, duckdb, planilha, verificar
+logs/                (criada ao rodar, fora do Git) log de pedidos e banco DuckDB
 ```
 
 ## Licença
