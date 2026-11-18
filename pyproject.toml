@@ -5,6 +5,7 @@ description = "Serviço BentoML de extração de leitura de medidor de energia"
 requires-python = "==3.12.*"
 dependencies = [
     "bentoml==1.4.39",
+    "duckdb==2.0.0",
     "httpx==0.28.1",
     "pillow==12.3.0",
     "pydantic==2.13.5",
@@ -12,6 +13,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "openpyxl==3.1.5",
     "pytest==9.1.1",
     "rust-just==1.58.0",
     "starlette==1.7.0",

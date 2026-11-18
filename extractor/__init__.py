@@ -6,15 +6,18 @@ import time
 from PIL import Image
 
 from extractor.confianca import calcular_confianca
-from extractor.modelo import OLLAMA_MODEL, chamar_modelo, limpar_campos, ollama_pronto
-from extractor.nitidez import imagem_nitida
+from extractor.modelo import (OLLAMA_MODEL, aquecer_modelo, chamar_modelo, limpar_campos,
+                              ollama_pronto)
+from extractor.nitidez import LIMIAR_NITIDEZ, nitidez
 
-__all__ = ["extrair", "ollama_pronto"]
+__all__ = ["extrair", "ollama_pronto", "aquecer_modelo"]
 
 
 def extrair(imagem: Image.Image) -> dict:
     inicio = time.perf_counter()
-    if imagem_nitida(imagem):
+    valor_nitidez = nitidez(imagem)
+    chamou_modelo = valor_nitidez >= LIMIAR_NITIDEZ
+    if chamou_modelo:
         bruto = chamar_modelo(imagem)
     else:
         bruto = {}  # foto lisa ou desfocada demais: nem chama o modelo
@@ -28,4 +31,7 @@ def extrair(imagem: Image.Image) -> dict:
         "status": status,
         "modelo": OLLAMA_MODEL,
         "tempo_ms": round((time.perf_counter() - inicio) * 1000),
+        # Sinais internos para o monitoramento; o serviço tira estes antes de responder.
+        "_nitidez": round(valor_nitidez, 2),
+        "_chamou_modelo": chamou_modelo,
     }

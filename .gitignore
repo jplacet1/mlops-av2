@@ -29,3 +29,8 @@ eval/
 .DS_Store
 .idea/
 .vscode/
+
+# Log de monitoramento (dados de pedidos) e bancos locais
+logs/
+*.duckdb
+*.duckdb.wal

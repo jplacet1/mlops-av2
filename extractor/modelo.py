@@ -12,6 +12,9 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL") or "http://localhost:11434"
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL") or "qwen2.5vl:3b"
 LADO_MAXIMO = 1024  # px; imagens maiores são reduzidas para limitar o tempo de inferência
 TIMEOUT_S = 120
+# Mantém o modelo na memória entre pedidos; sem isso o Ollama descarrega após 5 min
+# e o pedido seguinte paga de novo os ~20 s de carga.
+KEEP_ALIVE = "30m"
 
 # Sem valores de exemplo no prompt: no teste inicial o modelo copiava o exemplo como resposta.
 PROMPT = (
@@ -61,6 +64,7 @@ def chamar_modelo(imagem: Image.Image) -> dict:
         "images": [base64.b64encode(buffer.getvalue()).decode()],
         "format": SCHEMA,
         "stream": False,
+        "keep_alive": KEEP_ALIVE,
         "options": {"temperature": 0},
     }
     resposta = httpx.post(f"{OLLAMA_URL}/api/generate", json=corpo, timeout=TIMEOUT_S)
@@ -81,6 +85,17 @@ def limpar_campos(bruto: dict) -> dict:
         "funcao": _texto(bruto.get("funcao")),
         "consumo": bruto.get("consumo"),
     }
+
+
+def aquecer_modelo() -> None:
+    """Carrega o modelo no Ollama sem gerar nada (prompt vazio), para o primeiro pedido
+    real não pagar o tempo de carga. Falha em silêncio: o /readyz já avisa se o Ollama
+    estiver fora."""
+    try:
+        httpx.post(f"{OLLAMA_URL}/api/generate",
+                   json={"model": OLLAMA_MODEL, "keep_alive": KEEP_ALIVE}, timeout=TIMEOUT_S)
+    except httpx.HTTPError:
+        pass
 
 
 def ollama_pronto() -> bool:
