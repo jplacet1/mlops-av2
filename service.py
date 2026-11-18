@@ -83,8 +83,17 @@ def sinais_de_saida(resultado: dict) -> dict:
     }
 
 
+# Faixas de latência do /metrics. As padrão do BentoML pulam de 5 para 10 e de 10 para 30 s,
+# justo onde caem as fotos que vão ao modelo (2 a 16 s nesta máquina), e a mediana estimada
+# errava 3,5 s. As de até 50 ms separam as fotos barradas na nitidez (~10 ms).
+# O BentoML exige float em todos os itens (um int recusa a configuração).
+LATENCIA_S = [0.01, 0.025, 0.05, 0.1, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+              11.0, 12.0, 14.0, 16.0, 18.0, 20.0, 30.0, 60.0, 180.0]
+
+
 @bentoml.asgi_app(app_monitor, path="/monitor")
-@bentoml.service(name="leitura_medidor", traffic={"timeout": 180})
+@bentoml.service(name="leitura_medidor", traffic={"timeout": 180},
+                 metrics={"duration": {"buckets": LATENCIA_S}})
 class LeituraMedidor:
     def __init__(self) -> None:
         # Em segundo plano, para o serviço subir na hora mesmo com o Ollama lento.

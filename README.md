@@ -343,9 +343,10 @@ ferramenta ao testar; registramos aqui porque mudaram o resultado):
 - AV2: a primeira execução do `just verificar` num clone limpo quebrou na parte do
   DuckDB, porque a versão 2.0 mudou a API de consulta; o script foi corrigido e
   rodado de novo (saída em `docs/evidencias_av2.txt`).
-- AV2: a planilha estima o p50 da latência em 5,83 s pelos buckets, mas pelo log o
-  exato é 9,33 s; a diferença vem do bucket largo de 5 a 10 s e está explicada em
-  `monitoring/README.md`.
+- AV2: com as faixas padrão do BentoML, a planilha estimava o p50 da latência em 5,83 s
+  pelos buckets, mas pelo log o exato era 9,33 s, por causa da faixa larga de 5 a 10 s.
+  O serviço passou a usar faixas de 1 s entre 1 e 12 s, e o erro caiu para 0,35 s
+  (9,44 contra 9,79 s; ver `monitoring/README.md`).
 
 **Nossa avaliação crítica**
 

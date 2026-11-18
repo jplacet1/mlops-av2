@@ -173,8 +173,14 @@ total                  = bucket{le="+Inf"} = _count
 média                  = _sum / _count
 ```
 
-Os limites dos buckets do BentoML são fixos: 0,005; 0,01; 0,025; 0,05; 0,1; 0,25; 0,5;
-1; 2,5; 5; 10; 30; 60; 120; 180 s e +Inf.
+Os limites padrão do BentoML (0,005; 0,01; 0,025; 0,05; 0,1; 0,25; 0,5; 1; 2,5; 5; 10;
+30; 60; 120; 180 s) pulam de 5 para 10 s e de 10 para 30 s, justo onde caem as fotos que
+vão ao modelo (2 a 16 s nesta máquina). Na primeira janela medida, isso fez o p50
+estimado dar 5,83 s, contra 9,33 s exatos no log. Por isso o serviço define os próprios
+limites (`LATENCIA_S` em [`service.py`](../service.py), via `metrics.duration.buckets` da
+configuração do serviço): 0,01; 0,025; 0,05; 0,1; 0,5 s; de 1 em 1 s entre 1 e 12 s;
+de 2 em 2 s até 20 s; 30; 60; 180 s e +Inf. As faixas de até 50 ms separam as fotos
+barradas na nitidez (~10 ms).
 
 ### Percentis e boxplot da latência
 
@@ -190,8 +196,8 @@ p_q ≈ limite_inferior + (limite_superior − limite_inferior)
 mediana (p50) e Q3 (p75), com bigodes em Q1 − 1,5·IQR e Q3 + 1,5·IQR.
 
 **Limitação:** com buckets, só se sabe em que faixa cada pedido caiu. Mínimo, máximo e
-outliers não são conhecidos, e a precisão depende da largura do bucket. Entre 10 e 30 s,
-por exemplo, o erro pode chegar a 20 s. Para percentis e boxplot exatos, use o campo
+outliers não são conhecidos, e a precisão depende da largura do bucket. Entre 20 e 30 s,
+por exemplo, o erro pode chegar a 10 s. Para percentis e boxplot exatos, use o campo
 `latencia_ms` do log, que é o que a Parte 2 faz.
 
 ### Taxa de erros
@@ -208,19 +214,29 @@ do ar, resposta do modelo fora do formato). Para SLA, normalmente só o 5xx cont
 
 [`docs/metrics/analise_metrics.xlsx`](../docs/metrics/analise_metrics.xlsx) faz tudo isso
 com fórmulas, a partir de duas leituras reais do `/metrics` (`docs/metrics/snapshot_a.txt`
-e `snapshot_b.txt`), com 45 pedidos de carga e 3 arquivos inválidos entre elas:
+e `snapshot_b.txt`), já com as faixas novas. Entre elas foram 45 pedidos de carga (15 de
+referência com `--semente 1` e 30 de produção com `--semente 2`) e 3 arquivos inválidos:
 
 - **Latencia:** buckets A e B, pedidos por faixa, % acumulado, gráfico do histograma,
   média, p25/p50/p75/p90/p95/p99 e boxplot estimado.
 - **Erros:** pedidos por código HTTP na janela e taxas de erro 4xx e 5xx.
 - **Brutas:** todas as séries da leitura B.
 
-Resultado dessa janela: 45 pedidos com HTTP 200, média de 5,75 s e taxa de erro 4xx de
-6,25% (3 de 48), sem erros 5xx. A distribuição é bimodal: 18 pedidos levaram até 25 ms
-(fotos barradas na nitidez) e 27 levaram entre 5 e 10 s (fotos que foram ao modelo).
-Os percentis estimados pelos buckets são p50 ≈ 5,83 s e p95 ≈ 9,58 s. Pelo log
-(`latencia_ms`), os exatos são p50 = 9,33 s e p95 = 9,78 s. A diferença no p50 vem do
-bucket largo de 5 a 10 s, onde a interpolação linear supõe pedidos espalhados por igual.
+Resultado dessa janela: 44 pedidos com HTTP 200 e média de 6,41 s. A taxa de erro 4xx
+foi de 6,25% (3 de 48) e a de 5xx, de 2,08% (1 de 48): o Ollama devolveu 500 num pedido
+de referência e o serviço respondeu 503, como previsto na tabela de erros. A distribuição
+é bimodal: 18 pedidos levaram até 25 ms (fotos barradas na nitidez) e 24 levaram entre 9
+e 11 s (fotos que foram ao modelo); os outros 2 levaram até 14 s e até 30 s.
+
+| | estimado pelos buckets | exato pelo log (`latencia_ms`) |
+|---|---|---|
+| p50 | 9,44 s | 9,79 s |
+| p75 | 10,40 s | 10,23 s |
+| p95 | 10,99 s | 10,44 s |
+
+Com as faixas padrão, o erro do p50 era de 3,5 s (5,83 contra 9,33 s); com as novas, é de
+0,35 s. O que sobra vem da interpolação linear, que supõe os pedidos espalhados por igual
+dentro de cada faixa de 1 s.
 
 Para refazer com dados novos:
 
@@ -245,8 +261,11 @@ sum(rate(bentoml_service_request_total{endpoint="/extract",http_response_code=~"
 
 ### Por quanto tempo o /metrics guarda as informações
 
-**No servidor, só enquanto o processo estiver de pé.** Os contadores ficam na memória do
-processo do BentoML. Quando o serviço reinicia, tudo volta a zero. Testamos: depois de
+**No servidor, só até o serviço reiniciar.** O BentoML usa o modo multiprocesso do
+`prometheus_client`: cada processo grava os contadores em arquivos na pasta
+`prometheus_multiproc_dir`, dentro de `BENTOML_HOME` (por padrão `~/bentoml/`), e o
+`/metrics` soma esses arquivos. Ao subir, o `bentoml serve` apaga essa pasta
+(`ensure_prometheus_dir` em `bentoml/serving.py`), então tudo volta a zero. Testamos: depois de
 reiniciar o `just serve`, `bentoml_service_request_total` do `/extract` voltou a 0. O
 `/metrics` também não tem histórico, porque cada leitura mostra só o acumulado daquele
 instante.
