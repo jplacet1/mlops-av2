@@ -66,17 +66,19 @@ completo, então pandas (`pd.read_json(..., lines=True)`), DuckDB
 sem parser próprio. Exemplo real (quebrado em linhas aqui só para leitura):
 
 ```json
-{"ts": "2026-11-17T21:02:13.987504-03:00", "request_id": "09f5f92a21814cd8bf5eb99ff0859f31",
+{"ts": "2026-11-18T20:58:19.685223-03:00", "request_id": "5f3e5b0150f14aa08dc5f3849b30ba76",
  "endpoint": "/extract",
- "entrada": {"largura": 443, "altura": 442, "formato": "JPEG", "modo_cor": "RGB",
-             "bytes": 19034, "brilho_medio": 126.88, "contraste": 33.48,
-             "sha256": "2abf2620…", "nitidez": 212.47},
- "chamou_modelo": false,
- "saida": {"status": "ILEGIVEL", "confianca_geral": 0.0, "confianca_numero_medidor": 0.0,
-           "confianca_funcao": 0.0, "confianca_consumo": 0.0, "leu_numero_medidor": false,
-           "leu_funcao": false, "consumo": null, "campos_lidos": 0,
-           "modelo": "qwen2.5vl:3b", "tempo_modelo_ms": 2},
- "http_status": 200, "latencia_ms": 7.83}
+ "entrada": {"largura": 467, "altura": 403, "formato": "JPEG", "modo_cor": "RGB",
+             "bytes": 33277, "brilho_medio": 127.2, "contraste": 41.42, "sha256": "5dfc9f57…",
+             "media_r": 129.54, "media_g": 127.18, "media_b": 121.06, "croma_media": 5.43,
+             "nitidez_512": 331.2, "qualidade_tonal": "BAIXO_CONTRASTE", "frac_escuro": 0.0,
+             "frac_claro": 0.0, "amplitude_p5_p95": 123.0, "nitidez": 457.76},
+ "chamou_modelo": true,
+ "saida": {"status": "OK", "confianca_geral": 0.6, "confianca_numero_medidor": 0.9,
+           "confianca_funcao": 0.0, "confianca_consumo": 0.9, "leu_numero_medidor": true,
+           "leu_funcao": false, "consumo": 33628, "campos_lidos": 2,
+           "modelo": "qwen2.5vl:3b", "tempo_modelo_ms": 3180},
+ "http_status": 200, "latencia_ms": 3202.08}
 ```
 
 **Data e hora:** `ts` em ISO 8601 com microssegundos e fuso horário
@@ -106,7 +108,11 @@ se as fotos que chegam estão piores que as de referência e se as respostas mud
 | Variável | Tipo | Por que monitorar | Teste de drift |
 |---|---|---|---|
 | `entrada.nitidez` | contínua | É o mesmo sinal que decide se o modelo é chamado (limiar 300). Se a distribuição cair, mais fotos viram `ILEGIVEL`. | KS |
-| `entrada.brilho_medio`, `entrada.contraste` | contínuas (0–255) | Fotos noturnas ou com reflexo. | KS |
+| `entrada.nitidez_512` | contínua | A `nitidez` depende do tamanho da foto (achado da atividade de características): a mesma `example02.jpg` ampliada 3× cai de 959 para 149. Medida depois de reduzir o maior lado a 512 px, varia só de 579 para 487. É ela que se compara entre fotos de tamanhos diferentes. | KS |
+| `entrada.brilho_medio`, `entrada.contraste` | contínuas (0–255) | Média e desvio da luminância (aula 011): fotos noturnas ou com reflexo. | KS |
+| `entrada.media_r`, `media_g`, `media_b` | contínuas (0–255) | Médias dos canais (aula 011). Flash, luz amarela ou câmera nova deslocam um canal sem mudar o brilho. | KS |
+| `entrada.croma_media` | contínua | Medidor e display quase não têm cor. A croma sobe quando chega foto de fachada, portão ou parede em vez do medidor (atividade de características): é o sinal de que está chegando **outro tipo de foto**. | KS |
+| `entrada.qualidade_tonal` + `frac_escuro`, `frac_claro`, `amplitude_p5_p95` | categórica (`NORMAL`, `SUBEXPOSTA`, `SUPEREXPOSTA`, `BAIXO_CONTRASTE`) + contínuas | Duas fotos com o mesmo brilho médio podem estar uma estourada e outra lavada. Limiares da atividade de características, ainda não calibrados. | PSI (classe), KS |
 | `entrada.largura`, `altura`, `bytes` | contínuas | Mudança no app do leiturista ou na compressão das fotos. | KS |
 | `entrada.formato` | categórica | Mudança de origem das fotos. | PSI |
 | `saida.status` | categórica (`OK`/`ILEGIVEL`) | Principal indicador de negócio: fração de fotos que o serviço não consegue ler. | PSI |
@@ -116,8 +122,27 @@ se as fotos que chegam estão piores que as de referência e se as respostas mud
 | `latencia_ms` | contínua | Percentis de tempo de resposta e SLA (Parte 2). | — |
 | `chamou_modelo` | binária | Separa as respostas rápidas (barradas na nitidez) das lentas. | PSI |
 
-Para a Parte 2, as variáveis principais são **`entrada.nitidez` (entrada, KS)** e
-**`saida.status` (saída, PSI)**.
+Para a Parte 2, as variáveis principais são **`entrada.nitidez_512` (entrada, KS)** e
+**`saida.status` (saída, PSI)**. As fórmulas de croma, qualidade tonal e `nitidez_512`
+estão em [`features.py`](features.py) e vêm do trabalho do Henrique na atividade de
+características.
+
+### Conjunto de referência
+
+O modelo não foi treinado por nós e não temos o conjunto de treino dele, então a
+referência é definida à mão: as fotos de `examples/` com variações leves (recorte, giro
+de até 5°, brilho ±10%, JPEG 75–95), passadas pelo próprio serviço com o modelo real.
+Ela fica em `referencia/referencia.jsonl`, no mesmo formato do log de produção, e é a
+distribuição com que a Parte 2 compara a produção.
+
+```bash
+uv run just referencia 100                                           # recria (~10 s por foto)
+curl "localhost:3000/monitor/variaveis?fonte=referencia&formato=csv"   # lê pelo endpoint
+```
+
+O arquivo versionado tem 100 pedidos, todos com HTTP 200 e `status` OK (o mínimo que a
+Parte 2 pede): `nitidez_512` de 203 a 2110 (mediana 760), `croma_media` de 3,7 a 9,9
+(mediana 4,7) e qualidade tonal 75 `NORMAL`, 18 `BAIXO_CONTRASTE` e 7 `SUPEREXPOSTA`.
 
 **O que não vai para o log, de propósito:** a foto e o número do medidor. Em produção,
 o número do medidor identifica o cliente (LGPD), então o log guarda só se ele foi lido
@@ -324,6 +349,7 @@ curl "localhost:3000/monitor/variaveis?status=200&desde=2026-11-18T00:00:00-03:0
 | `desde`, `ate` | `2026-11-18T10:00:00-03:00` | filtra pelo `ts`; precisa do fuso (senão: 400) |
 | `status` | `200` | só pedidos com esse código HTTP |
 | `formato` | `csv` | CSV em vez de JSON |
+| `fonte` | `referencia` | lê `referencia/referencia.jsonl` em vez do log de produção |
 
 Ele aparece no Swagger? Não: é um app Starlette montado em `/monitor`, fora das APIs
 BentoML. A documentação é esta tabela.
@@ -385,9 +411,11 @@ uv run python -c "import duckdb; print(duckdb.connect('logs/metrics.duckdb', rea
 
 ## 5. Testes
 
-`uv run just test` roda os 3 testes da AV1 e mais 2 desta parte. Os novos verificam que
-cada pedido, inclusive com erro, vira exatamente uma linha nova no log, com fuso no `ts`,
-e que o `/monitor/variaveis` filtra, achata e devolve CSV. O `/metrics` não entra nos
+`uv run just test` roda os testes da AV1 e mais 6 desta parte. Os novos verificam que
+cada pedido, inclusive com erro, vira exatamente uma linha nova no log, com fuso no `ts` e
+as variáveis novas de entrada; que o `/monitor/variaveis` filtra, achata, devolve CSV e lê
+a referência com `?fonte=referencia`; e que croma, qualidade tonal e `nitidez_512` dão o
+esperado em imagens conhecidas ([`tests/test_features.py`](../tests/test_features.py)). O `/metrics` não entra nos
 testes, porque é servido pelo `bentoml serve` e não pelo app em processo dos testes. Ele
 foi conferido com o serviço no ar.
 

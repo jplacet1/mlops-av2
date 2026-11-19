@@ -6,10 +6,12 @@ Parâmetros (todos opcionais):
   desde, ate   horário ISO 8601 (ex.: 2026-11-18T10:00:00-03:00); filtra por `ts`
   status       só pedidos com esse código HTTP (ex.: 200)
   formato      json (padrão) ou csv
+  fonte        producao (padrão, logs/) ou referencia (referencia/referencia.jsonl)
 """
 
 import csv
 import io
+import json
 from datetime import datetime
 
 from starlette.applications import Starlette
@@ -17,6 +19,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
+from monitoring.gerar_referencia import REFERENCIA
 from monitoring.registro import ler_eventos
 
 
@@ -47,8 +50,15 @@ def filtrar(eventos: list[dict], desde: str | None, ate: str | None,
 
 async def variaveis(request: Request) -> Response:
     p = request.query_params
+    if p.get("fonte") == "referencia":
+        if not REFERENCIA.exists():
+            return JSONResponse({"erro": "rode just referencia para criar o conjunto"}, 404)
+        with open(REFERENCIA, encoding="utf-8") as f:
+            eventos = [json.loads(linha) for linha in f if linha.strip()]
+    else:
+        eventos = ler_eventos()
     try:
-        linhas = filtrar(ler_eventos(), p.get("desde"), p.get("ate"), p.get("status"))
+        linhas = filtrar(eventos, p.get("desde"), p.get("ate"), p.get("status"))
     except (ValueError, TypeError):  # TypeError: horário sem fuso comparado com o do log
         return JSONResponse({"erro": "desde/ate devem estar em ISO 8601, com fuso"}, 400)
 

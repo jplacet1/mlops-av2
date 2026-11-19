@@ -72,6 +72,7 @@ def test_cada_pedido_vira_uma_linha_no_log(cliente):
     ok, erro = eventos[-2], eventos[-1]
     assert ok["http_status"] == 200
     assert ok["entrada"]["largura"] == 480
+    assert {"croma_media", "nitidez_512", "qualidade_tonal", "media_r"} <= ok["entrada"].keys()
     assert ok["entrada"]["nitidez"] < 300 and ok["chamou_modelo"] is False
     assert ok["saida"]["status"] == "ILEGIVEL"
     assert "+" in ok["ts"] or "-" in ok["ts"][19:]  # horário com fuso
@@ -91,3 +92,19 @@ def test_monitor_variaveis_devolve_colunas_achatadas(cliente):
     assert csv.text.splitlines()[0].startswith("ts,")
 
     assert cliente.get("/monitor/variaveis", params={"desde": "ontem"}).status_code == 400
+
+
+def test_monitor_variaveis_le_a_referencia(cliente, tmp_path, monkeypatch):
+    import json
+
+    import monitoring.api as api
+
+    arquivo = tmp_path / "referencia.jsonl"
+    monkeypatch.setattr(api, "REFERENCIA", arquivo)
+    assert cliente.get("/monitor/variaveis", params={"fonte": "referencia"}).status_code == 404
+
+    evento = {"ts": "2026-11-18T10:00:00-03:00", "http_status": 200,
+              "entrada": {"croma_media": 3.5}}
+    arquivo.write_text(json.dumps(evento) + "\n", encoding="utf-8")
+    corpo = cliente.get("/monitor/variaveis", params={"fonte": "referencia"}).json()
+    assert corpo["total"] == 1 and corpo["variaveis"][0]["entrada_croma_media"] == 3.5

@@ -78,6 +78,10 @@ def main() -> None:
            boa.get("saida", {}).get("status") == "OK" and "nitidez" in boa.get("entrada", {}),
            f"nitidez {boa.get('entrada', {}).get('nitidez')}, "
            f"confiança {boa.get('saida', {}).get('confianca_geral')}")
+    novas = ("nitidez_512", "croma_media", "media_r", "media_g", "media_b", "qualidade_tonal")
+    checar("variáveis da atividade de características no log",
+           all(v in boa.get("entrada", {}) for v in novas),
+           ", ".join(f"{v} {boa.get('entrada', {}).get(v)}" for v in novas[:2] + novas[-1:]))
     checar("foto borrada: ILEGIVEL sem chamar o modelo",
            ruim.get("saida", {}).get("status") == "ILEGIVEL" and ruim.get("chamou_modelo") is False,
            f"nitidez {ruim.get('entrada', {}).get('nitidez')}")

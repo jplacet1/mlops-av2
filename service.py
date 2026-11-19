@@ -19,6 +19,7 @@ from pydantic import BaseModel
 
 from extractor import aquecer_modelo, extrair, ollama_pronto
 from monitoring.api import app as app_monitor
+from monitoring.features import features_imagem
 from monitoring.registro import registrar
 
 # Métricas próprias, expostas no mesmo GET /metrics do BentoML (formato Prometheus).
@@ -61,6 +62,7 @@ def sinais_de_entrada(arquivo: Path, imagem: Image.Image) -> dict:
         "brilho_medio": round(cinza.mean[0], 2),
         "contraste": round(cinza.stddev[0], 2),
         "sha256": hashlib.sha256(arquivo.read_bytes()).hexdigest(),
+        **features_imagem(imagem),
     }
 
 

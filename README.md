@@ -269,9 +269,9 @@ prontos.
 uv run just test
 ```
 
-O `just test` roda os dois arquivos de teste. Os cinco testes de `tests/test_service.py`
+O `just test` roda os três arquivos de teste. Os seis testes de `tests/test_service.py`
 chamam o app do BentoML em processo (sem subir servidor). Os três primeiros são da AV1;
-os dois últimos, da AV2. O log dos testes vai para uma pasta temporária
+os três últimos, da AV2. O log dos testes vai para uma pasta temporária
 (`tests/conftest.py`), nunca para `logs/`:
 
 | Teste | O que verifica | Precisa do Ollama? |
@@ -281,6 +281,7 @@ os dois últimos, da AV2. O log dos testes vai para uma pasta temporária
 | `test_entrada_invalida_devolve_400` | texto enviado como `.jpg` → 400 com mensagem clara | não |
 | `test_cada_pedido_vira_uma_linha_no_log` | um pedido bom e um inválido acrescentam exatamente 2 linhas ao log, com sinais de entrada e saída, fuso no `ts` e o erro do 400 | não |
 | `test_monitor_variaveis_devolve_colunas_achatadas` | `GET /monitor/variaveis` filtra por status, devolve CSV e recusa data inválida com 400 | não |
+| `test_monitor_variaveis_le_a_referencia` | `?fonte=referencia` lê `referencia/referencia.jsonl` e devolve 404 se ele não existe | não |
 
 Também há `tests/test_confianca_nitidez.py`, com testes unitários da fórmula de confiança
 e da checagem de nitidez (7 passam, 1 `xfail`; não precisam de Ollama). O `xfail` documenta
@@ -288,8 +289,12 @@ uma limitação conhecida: o `FIND_EDGES` do Pillow não filtra a borda de 1 px,
 imagem lisa e não preta (por exemplo, cinza 200x200) passa como nítida. Fotos reais não
 são lisas, mas a checagem de nitidez não é à prova disso.
 
-Saída esperada do `just test` (os dois arquivos juntos): `12 passed, 1 xfailed` com o
-Ollama de pé e o modelo baixado, ou `11 passed, 1 skipped, 1 xfailed` sem o Ollama (o teste
+`tests/test_features.py` (AV2) confere as variáveis da atividade de características:
+croma zero numa foto cinza, as três classes de qualidade tonal e a `nitidez_512` estável
+quando a foto é ampliada 3×.
+
+Saída esperada do `just test` (os três arquivos juntos): `16 passed, 1 xfailed` com o
+Ollama de pé e o modelo baixado, ou `15 passed, 1 skipped, 1 xfailed` sem o Ollama (o teste
 da foto boa é pulado).
 
 O `/metrics`, o Prometheus, o Loki e o DuckDB não cabem em teste em processo; para eles,
@@ -404,7 +409,9 @@ extractor/
 monitoring/          AV2: log, /monitor/variaveis, carga, DuckDB, planilha, verificação
   README.md          roteiro de avaliação da AV2
   stack/             docker-compose com Prometheus, Loki, Alloy e Grafana
-tests/               5 testes do /extract e do monitoramento + 8 unitários de confiança e nitidez
+tests/               6 testes do /extract e do monitoramento, 3 das variáveis de entrada
+                     e 8 unitários de confiança e nitidez
+referencia/          conjunto de referência para KS e PSI (AV2)
 examples/            5 fotos públicas + exemplo_resposta.json
 docs/                evidências (curl, Swagger, evidencias_av2.txt) e texto sobre as imagens
   metrics/           leituras do /metrics e planilha de análise (AV2)

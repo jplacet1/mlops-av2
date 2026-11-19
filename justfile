@@ -34,6 +34,10 @@ demo foto="examples/example02.jpg":
 carga n="20" perfil="referencia":
     uv run python -m monitoring.gerar_carga --n {{n}} --perfil {{perfil}}
 
+# Gera o conjunto de referência em referencia/referencia.jsonl (precisa do Ollama; ~10 s por foto)
+referencia n="100":
+    uv run python -m monitoring.gerar_referencia --n {{n}}
+
 # Acompanha o log de pedidos ao vivo (Ctrl+C para sair)
 rastro:
     tail -f logs/requisicoes.jsonl
