@@ -52,6 +52,7 @@ def promql(consulta: str) -> float:
 
 
 def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8")  # no Windows, `> arquivo` usaria cp1252
     c = httpx.Client(timeout=200)
     print("== Serviço")
     checar("GET /healthz responde 200", c.get(f"{SERVICO}/healthz").status_code == 200)
